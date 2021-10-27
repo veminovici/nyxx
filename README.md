@@ -1,12 +1,17 @@
 # Simplee..Nyxx...
 A rust crate
 
-## Build, Test
+## Run
+You can run nyxx in two modes:
 
+In the **prompt** mode you can introduce and interpret one line at a time.
+```rust
+RUST_LOG=trace target/debug/nyxx
 ```
-cargo build
-RUST_LOG=trace cargo test
-RUST_LOG=trace nyxx-in hello.lx
+
+In the **script** mode, you pass a source file.
+```rust
+RUST_LOG=trace target/debug/nyxx hello.lx
 ```
 
 ## Resources
