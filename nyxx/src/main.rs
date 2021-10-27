@@ -5,14 +5,12 @@ fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
 
     match args.len().cmp(&1) {
-        std::cmp::Ordering::Equal => 
-            run_file(args[0].clone()),
+        std::cmp::Ordering::Equal => run_file(args[0].clone()),
         std::cmp::Ordering::Greater => {
             eprintln!("usage: nyxx-in [script]");
             std::process::exit(64);
         }
-        _ =>
-            run_prompt(),
+        _ => run_prompt(),
     }
 }
 
@@ -30,7 +28,9 @@ fn run_prompt() {
         print!("> ");
         stdout.flush().unwrap();
 
-        stdin.read_line(&mut buffer).expect("Failed to read from console");
+        stdin
+            .read_line(&mut buffer)
+            .expect("Failed to read from console");
 
         let script = buffer.trim();
         if script.starts_with(":q") {

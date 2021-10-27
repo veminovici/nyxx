@@ -3,7 +3,6 @@ use std::fmt::{Debug, Display};
 /// Represents the tokens supported by the language.
 pub enum TokenValue {
     // Single-char tokens
-
     /// Left paren
     LeftParen,
     /// Right paren
@@ -26,9 +25,7 @@ pub enum TokenValue {
     Slash,
     /// Start
     Star,
-
     // One or two characters tokens
-
     /// Bang
     Bang,
     /// BangEqual
@@ -45,18 +42,14 @@ pub enum TokenValue {
     Less,
     /// LessEqual
     LessEqual,
-
     // Literals
-
     /// Identity
     Ident(String),
     /// String
     String(String),
     /// Number
     Number(f64),
-
     // Keywords
-
     /// And
     And,
     /// Class
@@ -181,7 +174,6 @@ impl Debug for TokenValue {
     }
 }
 
-
 /// Represents a position in the source file.
 #[derive(Clone, Copy)]
 pub struct Pos {
@@ -232,7 +224,11 @@ impl Display for Span {
 impl Debug for Span {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if self.start.line == self.end.line {
-            write!(f, "{:?}:{:?}-{:?}", self.start.line , self.start.col, self.end.col)
+            write!(
+                f,
+                "{:?}:{:?}-{:?}",
+                self.start.line, self.start.col, self.end.col
+            )
         } else {
             write!(f, "{:?}-{:?}", self.start, self.end)
         }
