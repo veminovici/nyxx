@@ -1,6 +1,8 @@
+use super::Span;
 use std::fmt::{Debug, Display};
 
 /// Represents the tokens supported by the language.
+#[derive(Clone)]
 pub enum TokenValue {
     // Single-char tokens
     /// Left paren
@@ -49,6 +51,8 @@ pub enum TokenValue {
     String(String),
     /// Number
     Number(f64),
+    /// Comment
+    Comment(String),
     // Keywords
     /// And
     And,
@@ -82,6 +86,8 @@ pub enum TokenValue {
     Var,
     /// While
     While,
+    /// EOF
+    Eof,
 }
 
 impl Display for TokenValue {
@@ -92,8 +98,10 @@ impl Display for TokenValue {
             TokenValue::BangEqual => write!(f, "BANG_EQUAL"),
             TokenValue::Class => write!(f, "CLASS"),
             TokenValue::Comma => write!(f, "COMMA"),
+            TokenValue::Comment(c) => write!(f, "COMM({})", c),
             TokenValue::Dot => write!(f, "DOT"),
             TokenValue::Else => write!(f, "ELSE"),
+            TokenValue::Eof => write!(f, "EOF"),
             TokenValue::Equal => write!(f, "EQUAL"),
             TokenValue::EqualEqual => write!(f, "EQUAL_EQUAL"),
             TokenValue::False => write!(f, "FALSE"),
@@ -137,8 +145,10 @@ impl Debug for TokenValue {
             TokenValue::BangEqual => write!(f, "!="),
             TokenValue::Class => write!(f, "class"),
             TokenValue::Comma => write!(f, ","),
+            TokenValue::Comment(c) => write!(f, "// {}", c),
             TokenValue::Dot => write!(f, "."),
             TokenValue::Else => write!(f, "else"),
+            TokenValue::Eof => write!(f, "eof"),
             TokenValue::Equal => write!(f, "="),
             TokenValue::EqualEqual => write!(f, "=="),
             TokenValue::False => write!(f, "false"),
@@ -174,67 +184,6 @@ impl Debug for TokenValue {
     }
 }
 
-/// Represents a position in the source file.
-#[derive(Clone, Copy)]
-pub struct Pos {
-    line: usize,
-    col: usize,
-}
-
-impl Pos {
-    /// Creates a new positions
-    pub fn new(line: usize, col: usize) -> Self {
-        Pos { line, col }
-    }
-}
-
-impl Display for Pos {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Ln {}, Col {}", self.line, self.col)
-    }
-}
-
-impl Debug for Pos {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}:{}", self.line, self.col)
-    }
-}
-
-/// Represents a span in the text. It starts at a line:column and ends
-/// at the line_end:column_end (inclusive). Line starts at 1, column at 0.
-#[derive(Clone, Copy)]
-pub struct Span {
-    start: Pos,
-    end: Pos,
-}
-
-impl Span {
-    /// Creates a new span instance
-    pub fn with_pos(start: Pos, end: Pos) -> Self {
-        Span { start, end }
-    }
-}
-
-impl Display for Span {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "({}) - ({})", self.start, self.end)
-    }
-}
-
-impl Debug for Span {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if self.start.line == self.end.line {
-            write!(
-                f,
-                "{:?}:{:?}-{:?}",
-                self.start.line, self.start.col, self.end.col
-            )
-        } else {
-            write!(f, "{:?}-{:?}", self.start, self.end)
-        }
-    }
-}
-
 /// Represents a token found in the source content
 pub struct Token {
     tkn_value: TokenValue,
@@ -243,8 +192,140 @@ pub struct Token {
 
 impl Token {
     /// Create a new instance of the token
-    pub fn new(tkn_value: TokenValue, span: Span) -> Self {
+    pub(crate) fn new(tkn_value: TokenValue, span: Span) -> Self {
         Self { tkn_value, span }
+    }
+
+    /// Create a new left-paren token
+    #[inline]
+    pub(crate) fn left_paren(span: Span) -> Self {
+        Token::new(TokenValue::LeftParen, span)
+    }
+
+    /// Create a new right-paren token
+    #[inline]
+    pub(crate) fn right_paren(span: Span) -> Self {
+        Token::new(TokenValue::RightParen, span)
+    }
+
+    /// Create a new left-brace token
+    #[inline]
+    pub(crate) fn left_brace(span: Span) -> Self {
+        Token::new(TokenValue::LeftBrace, span)
+    }
+
+    /// Create a new right-brace token
+    #[inline]
+    pub(crate) fn right_brace(span: Span) -> Self {
+        Token::new(TokenValue::RightBrace, span)
+    }
+
+    /// Create a new comma token
+    #[inline]
+    pub(crate) fn comma(span: Span) -> Self {
+        Token::new(TokenValue::Comma, span)
+    }
+
+    /// Create a new dot token
+    #[inline]
+    pub(crate) fn dot(span: Span) -> Self {
+        Token::new(TokenValue::Dot, span)
+    }
+
+    /// Create a new minus token
+    #[inline]
+    pub(crate) fn minus(span: Span) -> Self {
+        Token::new(TokenValue::Minus, span)
+    }
+
+    /// Create a new plus token
+    #[inline]
+    pub(crate) fn plus(span: Span) -> Self {
+        Token::new(TokenValue::Plus, span)
+    }
+
+    /// Create a new semicolon token
+    #[inline]
+    pub(crate) fn semicolon(span: Span) -> Self {
+        Token::new(TokenValue::Semicolon, span)
+    }
+
+    /// Create a new star token
+    #[inline]
+    pub(crate) fn star(span: Span) -> Self {
+        Token::new(TokenValue::Star, span)
+    }
+
+    /// Create a new bang token
+    #[inline]
+    pub(crate) fn bang(span: Span) -> Self {
+        Token::new(TokenValue::Bang, span)
+    }
+
+    /// Create a new bang-equal token
+    #[inline]
+    pub(crate) fn bang_equal(span: Span) -> Self {
+        Token::new(TokenValue::BangEqual, span)
+    }
+
+    /// Create a new equal token
+    #[inline]
+    pub(crate) fn equal(span: Span) -> Self {
+        Token::new(TokenValue::Equal, span)
+    }
+
+    /// Create a new equal-equal token
+    #[inline]
+    pub(crate) fn equal_equal(span: Span) -> Self {
+        Token::new(TokenValue::EqualEqual, span)
+    }
+
+    /// Create a new less token
+    #[inline]
+    pub(crate) fn less(span: Span) -> Self {
+        Token::new(TokenValue::Less, span)
+    }
+
+    /// Create a new less-equal token
+    #[inline]
+    pub(crate) fn less_equal(span: Span) -> Self {
+        Token::new(TokenValue::LessEqual, span)
+    }
+
+    /// Create a new greater token
+    #[inline]
+    pub(crate) fn greater(span: Span) -> Self {
+        Token::new(TokenValue::Greater, span)
+    }
+
+    /// Create a new greater-equal token
+    #[inline]
+    pub(crate) fn greater_equal(span: Span) -> Self {
+        Token::new(TokenValue::GreaterEqual, span)
+    }
+
+    /// Create a new slash token
+    #[inline]
+    pub(crate) fn slash(span: Span) -> Self {
+        Token::new(TokenValue::Slash, span)
+    }
+
+    /// Create a new comment token
+    #[inline]
+    pub(crate) fn comment(c: String, span: Span) -> Self {
+        Token::new(TokenValue::Comment(c), span)
+    }
+
+    /// Create a new string token
+    #[inline]
+    pub(crate) fn string(str: String, span: Span) -> Self {
+        Token::new(TokenValue::String(str), span)
+    }
+
+    /// Create a new number token
+    #[inline]
+    pub(crate) fn number(n: f64, span: Span) -> Self {
+        Token::new(TokenValue::Number(n), span)
     }
 }
 
