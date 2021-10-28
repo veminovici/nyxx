@@ -97,3 +97,89 @@ impl Debug for Span {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_default() {
+        let span = Span::default();
+        assert_eq!(1, span.start_line);
+        assert_eq!(1, span.end_line);
+        assert_eq!(0, span.start_col);
+        assert_eq!(0, span.end_col);
+    }
+
+    #[test]
+    fn test_new_column() {
+        let mut span = Span::default();
+        span.new_column();
+
+        assert_eq!(1, span.start_line);
+        assert_eq!(1, span.end_line);
+        assert_eq!(0, span.start_col);
+        assert_eq!(1, span.end_col);
+    }
+
+    #[test]
+    fn test_new_line() {
+        let mut span = Span::default();
+        span.new_column();
+        span.new_line();
+
+        assert_eq!(1, span.start_line);
+        assert_eq!(2, span.end_line);
+        assert_eq!(0, span.start_col);
+        assert_eq!(0, span.end_col);
+    }
+
+    #[test]
+    fn test_new_extract() {
+        let mut span = Span::default();
+        span.new_column();
+        span.new_line();
+
+        let span1 = span.extract();
+
+        assert_eq!(1, span1.start_line);
+        assert_eq!(2, span1.end_line);
+        assert_eq!(0, span1.start_col);
+        assert_eq!(0, span1.end_col);
+
+        assert_eq!(2, span.start_line);
+        assert_eq!(2, span.end_line);
+        assert_eq!(0, span.start_col);
+        assert_eq!(0, span.end_col);
+    }
+
+    #[test]
+    fn test_display() {
+        let mut span = Span::default();
+        let s = format!("{}", span);
+        assert!(!s.is_empty());
+
+        span.new_column();
+        let s = format!("{}", span);
+        assert!(!s.is_empty());
+
+        span.new_line();
+        let s = format!("{}", span);
+        assert!(!s.is_empty());
+    }
+
+    #[test]
+    fn test_debug() {
+        let mut span = Span::default();
+        let s = format!("{:?}", span);
+        assert!(!s.is_empty());
+
+        span.new_column();
+        let s = format!("{:?}", span);
+        assert!(!s.is_empty());
+
+        span.new_line();
+        let s = format!("{:?}", span);
+        assert!(!s.is_empty());
+    }
+}
