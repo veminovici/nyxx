@@ -188,11 +188,11 @@ impl<'a> LexContext<'a> {
         let mut buffer = String::new();
 
         while let Some(c) = self.source.next() {
-            self.span += 1;
+            self.span.new_column();
             buffer.push(c);
 
             if c == CHAR_NEWLINE {
-                self.span *= 1;
+                self.span.new_line();
                 break;
             }
         }
@@ -203,9 +203,9 @@ impl<'a> LexContext<'a> {
     /// Read the next character in the stream
     pub(crate) fn read_char(&mut self) -> Option<(char, Span)> {
         if let Some(c) = self.source.next() {
-            self.span += 1;
+            self.span.new_column();
             if c == CHAR_NEWLINE {
-                self.span *= 1;
+                self.span.new_line();
             }
 
             Some((c, self.span))
@@ -236,9 +236,9 @@ impl<'a> LexContext<'a> {
         let mut string_terminated = false;
 
         while let Some(c) = self.source.next() {
-            self.span += 1;
+            self.span.new_column();
             if c == CHAR_NEWLINE {
-                self.span *= 1;
+                self.span.new_line();
             }
 
             if c == CHAR_DOUBLE_QUOTE {

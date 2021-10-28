@@ -1,5 +1,4 @@
 use std::fmt::{Debug, Display};
-use std::ops::{Add, AddAssign, Mul, MulAssign};
 
 /// Represents a span in the text. It starts at a line:column and ends
 /// at the line_end:column_end (inclusive). Line starts at 1, column at 0.
@@ -26,6 +25,15 @@ impl Span {
             end_line: 1,
             end_col: 0,
         }
+    }
+
+    pub(crate) fn new_column(&mut self) {
+        self.end_col += 1;
+    }
+
+    pub(crate) fn new_line(&mut self) {
+        self.end_line += 1;
+        self.end_col = 0;
     }
 
     /// Extracts the current span and get ready to continue
@@ -63,44 +71,5 @@ impl Debug for Span {
             "({}:{}-{}:{})",
             self.start_line, self.start_col, self.end_line, self.end_col
         )
-    }
-}
-
-impl Add<usize> for Span {
-    type Output = Self;
-
-    fn add(self, rhs: usize) -> Self::Output {
-        Self {
-            start_line: self.start_line,
-            start_col: self.start_col,
-            end_line: self.end_line,
-            end_col: self.end_col + rhs,
-        }
-    }
-}
-
-impl AddAssign<usize> for Span {
-    fn add_assign(&mut self, rhs: usize) {
-        self.end_col += rhs;
-    }
-}
-
-impl Mul<usize> for Span {
-    type Output = Span;
-
-    fn mul(self, rhs: usize) -> Self::Output {
-        Self {
-            start_line: self.start_line,
-            start_col: self.start_col,
-            end_line: self.end_line + rhs,
-            end_col: 0,
-        }
-    }
-}
-
-impl MulAssign<usize> for Span {
-    fn mul_assign(&mut self, rhs: usize) {
-        self.end_line += rhs;
-        self.end_col = 0;
     }
 }
