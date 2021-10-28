@@ -13,24 +13,18 @@ const CHAR_MINUS: char = '-';
 const CHAR_PLUS: char = '+';
 const CHAR_SEMICOLON: char = ';';
 const CHAR_STAR: char = '*';
-
 const CHAR_BANG: char = '!';
 const CHAR_EQUAL: char = '=';
 const CHAR_LESS: char = '<';
 const CHAR_GREATER: char = '>';
-
 const CHAR_SLASH: char = '/';
-
 const CHAR_DOUBLE_QUOTE: char = '"';
-
 const CHAR_NEWLINE: char = '\n';
 const CHAR_WHITESPACE: char = ' ';
 const CHAR_CARRIAGE_RETURN: char = '\r';
 const CHAR_TAB: char = '\t';
-
 const CHAR_0: char = '0';
 const CHAR_9: char = '9';
-
 const CHAR_LOWERCASE_A: char = 'a';
 const CHAR_LOWERCASE_Z: char = 'z';
 const CHAR_UPPERCASE_A: char = 'A';
@@ -296,8 +290,11 @@ pub fn lex(source: &str) -> Vec<Token> {
     tokens
 }
 
-/// The Lex context
-pub struct LexContext<'a> {
+//
+// Lexer context
+//
+
+struct LexContext<'a> {
     source: Peekable<Chars<'a>>,
     span: Span,
 }
@@ -582,6 +579,10 @@ impl<'a> LexContext<'a> {
     }
 }
 
+//
+// Utility functions
+//
+
 fn is_digit(c: char) -> bool {
     c >= CHAR_0 && c <= CHAR_9
 }
@@ -598,15 +599,4 @@ fn is_alphanum(c: char) -> bool {
 
 fn is_whitespace(c: char) -> bool {
     c == CHAR_WHITESPACE || c == CHAR_TAB || c == CHAR_CARRIAGE_RETURN
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_left_paren() {
-        let source = "(";
-        let tokens = lex(source);
-    }
 }
