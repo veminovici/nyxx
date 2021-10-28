@@ -61,73 +61,76 @@ pub fn lex(source: &str) -> Vec<Token> {
     let mut tokens = Vec::new();
     let mut ctx = LexContext::new(source);
 
-    while let Some((c, span)) = ctx.read_char() {
+    while let Some(c) = ctx.read_char() {
         let match_token = match c {
             // Single charactoer token
-            CHAR_LEFT_PAREN => Some(Token::left_paren(span)),
-            CHAR_RIGHT_PAREN => Some(Token::right_paren(span)),
-            CHAR_LEFT_BRACE => Some(Token::left_brace(span)),
-            CHAR_RIGHT_BRACE => Some(Token::right_brace(span)),
-            CHAR_COMMA => Some(Token::comma(span)),
-            CHAR_DOT => Some(Token::dot(span)),
-            CHAR_MINUS => Some(Token::minus(span)),
-            CHAR_PLUS => Some(Token::plus(span)),
-            CHAR_SEMICOLON => Some(Token::semicolon(span)),
-            CHAR_STAR => Some(Token::star(span)),
+            CHAR_LEFT_PAREN => Some(ctx.left_paren()),
+            CHAR_RIGHT_PAREN => Some(ctx.right_paren()),
+            CHAR_LEFT_BRACE => Some(ctx.left_brace()),
+            CHAR_RIGHT_BRACE => Some(ctx.right_brace()),
+            CHAR_COMMA => Some(ctx.comma()),
+            CHAR_DOT => Some(ctx.dot()),
+            CHAR_MINUS => Some(ctx.minus()),
+            CHAR_PLUS => Some(ctx.plus()),
+            CHAR_SEMICOLON => Some(ctx.semicolon()),
+            CHAR_STAR => Some(ctx.star()),
             CHAR_BANG => {
                 if let Some(CHAR_EQUAL) = ctx.peek_char() {
-                    let (_, span_end) = ctx.read_char().unwrap();
-                    Some(Token::bang_equal(span_end))
+                    let _ = ctx.read_char().unwrap();
+                    Some(ctx.bang_equal())
                 } else {
-                    Some(Token::bang(span))
+                    Some(ctx.bang())
                 }
             }
             CHAR_EQUAL => {
                 if let Some(CHAR_EQUAL) = ctx.peek_char() {
-                    let (_, span_end) = ctx.read_char().unwrap();
-                    Some(Token::equal_equal(span_end))
+                    let _ = ctx.read_char().unwrap();
+                    Some(ctx.equal_equal())
                 } else {
-                    Some(Token::equal(span))
+                    Some(ctx.equal())
                 }
             }
             CHAR_LESS => {
                 if let Some(CHAR_EQUAL) = ctx.peek_char() {
-                    let (_, span_end) = ctx.read_char().unwrap();
-                    Some(Token::less_equal(span_end))
+                    let _ = ctx.read_char().unwrap();
+                    Some(ctx.less_equal())
                 } else {
-                    Some(Token::less(span))
+                    Some(ctx.less())
                 }
             }
             CHAR_GREATER => {
                 if let Some(CHAR_EQUAL) = ctx.peek_char() {
-                    let (_, span_end) = ctx.read_char().unwrap();
-                    Some(Token::greater_equal(span_end))
+                    let _ = ctx.read_char().unwrap();
+                    Some(ctx.greater_equal())
                 } else {
-                    Some(Token::greater(span))
+                    Some(ctx.greater())
                 }
             }
             CHAR_SLASH => {
                 if let Some(CHAR_SLASH) = ctx.peek_char() {
-                    let (cmnt, span_end) = ctx.read_line();
-                    Some(Token::comment(cmnt, span_end))
+                    let cmnt = ctx.read_line();
+                    Some(ctx.comment(cmnt))
                 } else {
-                    Some(Token::slash(span))
+                    Some(ctx.slash())
                 }
             }
             CHAR_DOUBLE_QUOTE => {
-                if let Some((str, span_end)) = ctx.read_string() {
-                    Some(Token::string(str, span_end))
+                if let Some(s) = ctx.read_string() {
+                    Some(ctx.string(s))
                 } else {
                     log::error!("We didnt finish the string");
                     panic!("We should finish the string")
                 }
             }
-            CHAR_NEWLINE => None,
-            CHAR_WHITESPACE | CHAR_TAB | CHAR_CARRIAGE_RETURN => None,
+            CHAR_NEWLINE => Some(ctx.newline()),
+            ws if is_whitespace(ws) => {
+                let ws = ctx.read_ws(ws);
+                Some(ctx.whitespace(ws))
+            }
             // Digit
             digit if is_digit(digit) => {
-                if let Some((number, span_end)) = ctx.read_number(digit) {
-                    Some(Token::number(number, span_end))
+                if let Some(number) = ctx.read_number(digit) {
+                    Some(ctx.number(number))
                 } else {
                     log::error!("We didnt finish the number");
                     panic!("We should finish the number")
@@ -135,9 +138,7 @@ pub fn lex(source: &str) -> Vec<Token> {
             }
             // Alpha
             alpha if is_alpha(alpha) => {
-                println!("start_span={}", ctx.span);
-                let (ident, span) = ctx.read_identifier(alpha);
-                println!("end_span={}", span);
+                let ident = ctx.read_identifier(alpha);
 
                 let srch = KEYWORDS.binary_search_by_key(&ident.as_str(), |&(k, _)| k);
                 let token_value = match srch {
@@ -145,7 +146,7 @@ pub fn lex(source: &str) -> Vec<Token> {
                     Err(_) => TokenValue::Ident(ident),
                 };
 
-                Some(Token::new(token_value, span))
+                Some(ctx.token(token_value))
             }
             unexpected => {
                 log::error!("Unexpected char {}", unexpected);
@@ -184,10 +185,10 @@ impl<'a> LexContext<'a> {
     }
 
     /// Read till the end of the line
-    pub(crate) fn read_line(&mut self) -> (String, Span) {
+    pub(crate) fn read_line(&mut self) -> String {
         let mut buffer = String::new();
 
-        while let Some(c) = self.source.next() {
+        for c in &mut self.source {
             self.span.new_column();
             buffer.push(c);
 
@@ -197,25 +198,25 @@ impl<'a> LexContext<'a> {
             }
         }
 
-        (buffer, self.span)
+        buffer
     }
 
     /// Read the next character in the stream
-    pub(crate) fn read_char(&mut self) -> Option<(char, Span)> {
+    pub(crate) fn read_char(&mut self) -> Option<char> {
         if let Some(c) = self.source.next() {
             self.span.new_column();
             if c == CHAR_NEWLINE {
                 self.span.new_line();
             }
 
-            Some((c, self.span))
+            Some(c)
         } else {
             None
         }
     }
 
     /// Read an identifier
-    pub(crate) fn read_identifier(&mut self, first_alpha: char) -> (String, Span) {
+    pub(crate) fn read_identifier(&mut self, first_alpha: char) -> String {
         let mut buffer = format!("{}", first_alpha);
 
         while let Some(maybe_alphanumeric) = self.source.peek() {
@@ -227,15 +228,15 @@ impl<'a> LexContext<'a> {
             }
         }
 
-        (buffer, self.span.extract())
+        buffer
     }
 
     /// Read a string
-    pub(crate) fn read_string(&mut self) -> Option<(String, Span)> {
+    pub(crate) fn read_string(&mut self) -> Option<String> {
         let mut buffer = String::new();
         let mut string_terminated = false;
 
-        while let Some(c) = self.source.next() {
+        for c in &mut self.source {
             self.span.new_column();
             if c == CHAR_NEWLINE {
                 self.span.new_line();
@@ -250,13 +251,13 @@ impl<'a> LexContext<'a> {
         }
 
         if string_terminated {
-            Some((buffer, self.span))
+            Some(buffer)
         } else {
             None
         }
     }
 
-    pub(crate) fn read_number(&mut self, first_digit: char) -> Option<(f64, Span)> {
+    pub(crate) fn read_number(&mut self, first_digit: char) -> Option<f64> {
         let mut buffer = format!("{}", first_digit);
 
         // Read leading digits
@@ -303,10 +304,149 @@ impl<'a> LexContext<'a> {
         }
 
         if let Ok(number) = f64::from_str(&buffer) {
-            Some((number, self.span))
+            Some(number)
         } else {
             None
         }
+    }
+
+    pub(crate) fn read_ws(&mut self, first_ws: char) -> String {
+        let mut buffer = format!("{}", first_ws);
+
+        while let Some(maybe_ws) = self.source.peek().copied() {
+            if is_whitespace(maybe_ws) {
+                buffer.push(maybe_ws);
+                self.read_char();
+            } else {
+                break;
+            }
+        }
+
+        buffer
+    }
+
+    pub(crate) fn token(&mut self, token_value: TokenValue) -> Token {
+        Token::new(token_value, self.span.extract())
+    }
+
+    #[inline]
+    pub(crate) fn left_paren(&mut self) -> Token {
+        Token::left_paren(self.span.extract())
+    }
+
+    #[inline]
+    pub(crate) fn right_paren(&mut self) -> Token {
+        Token::right_paren(self.span.extract())
+    }
+
+    #[inline]
+    pub(crate) fn left_brace(&mut self) -> Token {
+        Token::left_brace(self.span.extract())
+    }
+
+    #[inline]
+    pub(crate) fn right_brace(&mut self) -> Token {
+        Token::right_brace(self.span.extract())
+    }
+
+    #[inline]
+    pub(crate) fn comma(&mut self) -> Token {
+        Token::comma(self.span.extract())
+    }
+
+    #[inline]
+    pub(crate) fn dot(&mut self) -> Token {
+        Token::dot(self.span.extract())
+    }
+
+    #[inline]
+    pub(crate) fn minus(&mut self) -> Token {
+        Token::minus(self.span.extract())
+    }
+
+    #[inline]
+    pub(crate) fn plus(&mut self) -> Token {
+        Token::plus(self.span.extract())
+    }
+
+    #[inline]
+    pub(crate) fn semicolon(&mut self) -> Token {
+        Token::semicolon(self.span.extract())
+    }
+
+    #[inline]
+    pub(crate) fn star(&mut self) -> Token {
+        Token::star(self.span.extract())
+    }
+
+    #[inline]
+    pub(crate) fn bang(&mut self) -> Token {
+        Token::bang(self.span.extract())
+    }
+
+    #[inline]
+    pub(crate) fn bang_equal(&mut self) -> Token {
+        Token::bang_equal(self.span.extract())
+    }
+
+    #[inline]
+    pub(crate) fn equal(&mut self) -> Token {
+        Token::equal(self.span.extract())
+    }
+
+    #[inline]
+    pub(crate) fn equal_equal(&mut self) -> Token {
+        Token::equal_equal(self.span.extract())
+    }
+
+    #[inline]
+    pub(crate) fn less(&mut self) -> Token {
+        Token::less(self.span.extract())
+    }
+
+    #[inline]
+    pub(crate) fn less_equal(&mut self) -> Token {
+        Token::less_equal(self.span.extract())
+    }
+
+    #[inline]
+    pub(crate) fn greater(&mut self) -> Token {
+        Token::greater(self.span.extract())
+    }
+
+    #[inline]
+    pub(crate) fn greater_equal(&mut self) -> Token {
+        Token::greater_equal(self.span.extract())
+    }
+
+    #[inline]
+    pub(crate) fn slash(&mut self) -> Token {
+        Token::slash(self.span.extract())
+    }
+
+    #[inline]
+    pub(crate) fn comment(&mut self, c: String) -> Token {
+        Token::comment(c, self.span.extract())
+    }
+
+    #[inline]
+    pub(crate) fn string(&mut self, s: String) -> Token {
+        Token::string(s, self.span.extract())
+    }
+
+    #[inline]
+    pub(crate) fn newline(&mut self) -> Token {
+        Token::newline(self.span.extract())
+    }
+
+    #[inline]
+    pub(crate) fn whitespace(&mut self, ws: String) -> Token {
+        Token::whitespace(ws, self.span.extract())
+    }
+
+    #[inline]
+    pub(crate) fn number(&mut self, number: f64) -> Token {
+        Token::number(number, self.span.extract())
     }
 }
 
@@ -322,4 +462,19 @@ fn is_alpha(c: char) -> bool {
 
 fn is_alphanum(c: char) -> bool {
     is_alpha(c) || is_digit(c)
+}
+
+fn is_whitespace(c: char) -> bool {
+    c == CHAR_WHITESPACE || c == CHAR_TAB || c == CHAR_CARRIAGE_RETURN
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_left_paren() {
+        let source = "(";
+        let tokens = lex(source);
+    }
 }

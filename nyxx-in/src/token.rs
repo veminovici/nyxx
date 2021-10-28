@@ -86,11 +86,16 @@ pub enum TokenValue {
     Var,
     /// While
     While,
+    // Others
+    /// Whitespace
+    Whitespace(String),
+    /// New line
+    NewLine,
     /// EOF
     Eof,
 }
 
-impl Display for TokenValue {
+impl Debug for TokenValue {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             TokenValue::And => write!(f, "AND"),
@@ -116,6 +121,7 @@ impl Display for TokenValue {
             TokenValue::Less => write!(f, "LESS"),
             TokenValue::LessEqual => write!(f, "LESS_EQUAL"),
             TokenValue::Minus => write!(f, "MINUS"),
+            TokenValue::NewLine => write!(f, "NEWLINE"),
             TokenValue::Nil => write!(f, "NIL"),
             TokenValue::Number(n) => write!(f, "NUMBER({})", n),
             TokenValue::Or => write!(f, "OR"),
@@ -132,12 +138,13 @@ impl Display for TokenValue {
             TokenValue::This => write!(f, "THIS"),
             TokenValue::True => write!(f, "TRUE"),
             TokenValue::Var => write!(f, "VAR"),
+            TokenValue::Whitespace(w) => write!(f, "WS({})", w),
             TokenValue::While => write!(f, "WHILE"),
         }
     }
 }
 
-impl Debug for TokenValue {
+impl Display for TokenValue {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             TokenValue::And => write!(f, "and"),
@@ -163,7 +170,8 @@ impl Debug for TokenValue {
             TokenValue::Less => write!(f, "<"),
             TokenValue::LessEqual => write!(f, "<=>"),
             TokenValue::Minus => write!(f, "-"),
-            TokenValue::Nil => write!(f, "nilL"),
+            TokenValue::NewLine => write!(f, "<nl>"),
+            TokenValue::Nil => write!(f, "nil"),
             TokenValue::Number(n) => write!(f, "{}", n),
             TokenValue::Or => write!(f, "or"),
             TokenValue::Plus => write!(f, "+"),
@@ -179,6 +187,7 @@ impl Debug for TokenValue {
             TokenValue::This => write!(f, "this"),
             TokenValue::True => write!(f, "true"),
             TokenValue::Var => write!(f, "var"),
+            TokenValue::Whitespace(_) => write!(f, "<ws>"),
             TokenValue::While => write!(f, "while"),
         }
     }
@@ -327,6 +336,18 @@ impl Token {
     pub(crate) fn number(n: f64, span: Span) -> Self {
         Token::new(TokenValue::Number(n), span)
     }
+
+    /// Create a whitespace token
+    #[inline]
+    pub(crate) fn whitespace(ws: String, span: Span) -> Self {
+        Token::new(TokenValue::Whitespace(ws), span)
+    }
+
+    /// Create a newline token
+    #[inline]
+    pub(crate) fn newline(span: Span) -> Self {
+        Token::new(TokenValue::NewLine, span)
+    }
 }
 
 impl Display for Token {
@@ -337,6 +358,6 @@ impl Display for Token {
 
 impl Debug for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?} ({:?}", self.tkn_value, self.span)
+        write!(f, "{:?}@{:?}", self.tkn_value, self.span)
     }
 }
