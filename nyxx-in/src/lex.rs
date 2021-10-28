@@ -50,6 +50,10 @@ static KEYWORDS: &[(&str, TokenValue)] = &[
     ("while", TokenValue::While),
 ];
 
+//
+// Lexer
+//
+
 /// The lexer for a source string
 pub struct Lexer {
     source: String,
@@ -74,6 +78,10 @@ impl From<String> for Lexer {
         Lexer::new(source)
     }
 }
+
+//
+// Lexer iterator
+//
 
 /// Creates an iterator for the tokens
 pub struct LexerIter<'a> {
