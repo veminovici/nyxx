@@ -70,6 +70,12 @@ impl Lexer {
     }
 }
 
+impl From<String> for Lexer {
+    fn from(source: String) -> Self {
+        Lexer::new(source)
+    }
+}
+
 /// Creates an iterator for the tokens
 pub struct LexerIter<'a> {
     ctx: LexContext<'a>,
