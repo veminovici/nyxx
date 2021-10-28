@@ -51,20 +51,20 @@ static KEYWORDS: &[(&str, TokenValue)] = &[
 ];
 
 /// The lexer for a source string
-pub struct Lexer<'a> {
-    source: &'a str,
+pub struct Lexer {
+    source: String,
 }
 
-impl<'a> Lexer<'a> {
+impl Lexer {
     /// Creates a new lexer
-    pub fn new(source: &'a str) -> Self {
+    pub fn new(source: String) -> Self {
         Lexer { source }
     }
 
     /// returns an iterator
     pub fn iter(&self) -> LexerIter {
         LexerIter {
-            ctx: LexContext::new(self.source),
+            ctx: LexContext::new(&self.source),
             eof_sent: false,
         }
     }
@@ -180,114 +180,6 @@ impl<'a> Iterator for LexerIter<'a> {
         self.eof_sent = true;
         Some(Token::new(TokenValue::Eof, self.ctx.span))
     }
-}
-
-/// Parses the source string and returns the collection of tokens
-pub fn lex(source: &str) -> Vec<Token> {
-    let mut tokens = Vec::new();
-    let mut ctx = LexContext::new(source);
-
-    while let Some(c) = ctx.read_char() {
-        let match_token = match c {
-            // Single charactoer token
-            CHAR_LEFT_PAREN => Some(ctx.left_paren()),
-            CHAR_RIGHT_PAREN => Some(ctx.right_paren()),
-            CHAR_LEFT_BRACE => Some(ctx.left_brace()),
-            CHAR_RIGHT_BRACE => Some(ctx.right_brace()),
-            CHAR_COMMA => Some(ctx.comma()),
-            CHAR_DOT => Some(ctx.dot()),
-            CHAR_MINUS => Some(ctx.minus()),
-            CHAR_PLUS => Some(ctx.plus()),
-            CHAR_SEMICOLON => Some(ctx.semicolon()),
-            CHAR_STAR => Some(ctx.star()),
-            CHAR_BANG => {
-                if let Some(CHAR_EQUAL) = ctx.peek_char() {
-                    let _ = ctx.read_char().unwrap();
-                    Some(ctx.bang_equal())
-                } else {
-                    Some(ctx.bang())
-                }
-            }
-            CHAR_EQUAL => {
-                if let Some(CHAR_EQUAL) = ctx.peek_char() {
-                    let _ = ctx.read_char().unwrap();
-                    Some(ctx.equal_equal())
-                } else {
-                    Some(ctx.equal())
-                }
-            }
-            CHAR_LESS => {
-                if let Some(CHAR_EQUAL) = ctx.peek_char() {
-                    let _ = ctx.read_char().unwrap();
-                    Some(ctx.less_equal())
-                } else {
-                    Some(ctx.less())
-                }
-            }
-            CHAR_GREATER => {
-                if let Some(CHAR_EQUAL) = ctx.peek_char() {
-                    let _ = ctx.read_char().unwrap();
-                    Some(ctx.greater_equal())
-                } else {
-                    Some(ctx.greater())
-                }
-            }
-            CHAR_SLASH => {
-                if let Some(CHAR_SLASH) = ctx.peek_char() {
-                    let cmnt = ctx.read_line();
-                    Some(ctx.comment(cmnt))
-                } else {
-                    Some(ctx.slash())
-                }
-            }
-            CHAR_DOUBLE_QUOTE => {
-                if let Some(s) = ctx.read_string() {
-                    Some(ctx.string(s))
-                } else {
-                    log::error!("We didnt finish the string");
-                    panic!("We should finish the string")
-                }
-            }
-            CHAR_NEWLINE => Some(ctx.newline()),
-            ws if is_whitespace(ws) => {
-                let ws = ctx.read_ws(ws);
-                Some(ctx.whitespace(ws))
-            }
-            // Digit
-            digit if is_digit(digit) => {
-                if let Some(number) = ctx.read_number(digit) {
-                    Some(ctx.number(number))
-                } else {
-                    log::error!("We didnt finish the number");
-                    panic!("We should finish the number")
-                }
-            }
-            // Alpha
-            alpha if is_alpha(alpha) => {
-                let ident = ctx.read_identifier(alpha);
-
-                let srch = KEYWORDS.binary_search_by_key(&ident.as_str(), |&(k, _)| k);
-                let token_value = match srch {
-                    Ok(index) => KEYWORDS[index].1.clone(),
-                    Err(_) => TokenValue::Ident(ident),
-                };
-
-                Some(ctx.token(token_value))
-            }
-            unexpected => {
-                log::error!("Unexpected char {}", unexpected);
-                break;
-            }
-        };
-
-        if let Some(token) = match_token {
-            log::info!("found token={}", token);
-            tokens.push(token);
-        }
-    }
-
-    tokens.push(Token::new(TokenValue::Eof, ctx.span));
-    tokens
 }
 
 //
