@@ -65,7 +65,6 @@ impl Lexer {
     pub fn iter(&self) -> LexerIter {
         LexerIter {
             ctx: LexContext::new(&self.source),
-            eof_sent: false,
         }
     }
 }
@@ -79,112 +78,13 @@ impl From<String> for Lexer {
 /// Creates an iterator for the tokens
 pub struct LexerIter<'a> {
     ctx: LexContext<'a>,
-    eof_sent: bool,
 }
 
 impl<'a> Iterator for LexerIter<'a> {
     type Item = Token;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.eof_sent {
-            return None;
-        }
-
-        if let Some(c) = self.ctx.read_char() {
-            let match_token = match c {
-                // Single charactoer token
-                CHAR_LEFT_PAREN => Some(self.ctx.left_paren()),
-                CHAR_RIGHT_PAREN => Some(self.ctx.right_paren()),
-                CHAR_LEFT_BRACE => Some(self.ctx.left_brace()),
-                CHAR_RIGHT_BRACE => Some(self.ctx.right_brace()),
-                CHAR_COMMA => Some(self.ctx.comma()),
-                CHAR_DOT => Some(self.ctx.dot()),
-                CHAR_MINUS => Some(self.ctx.minus()),
-                CHAR_PLUS => Some(self.ctx.plus()),
-                CHAR_SEMICOLON => Some(self.ctx.semicolon()),
-                CHAR_STAR => Some(self.ctx.star()),
-                CHAR_BANG => {
-                    if let Some(CHAR_EQUAL) = self.ctx.peek_char() {
-                        let _ = self.ctx.read_char().unwrap();
-                        Some(self.ctx.bang_equal())
-                    } else {
-                        Some(self.ctx.bang())
-                    }
-                }
-                CHAR_EQUAL => {
-                    if let Some(CHAR_EQUAL) = self.ctx.peek_char() {
-                        let _ = self.ctx.read_char().unwrap();
-                        Some(self.ctx.equal_equal())
-                    } else {
-                        Some(self.ctx.equal())
-                    }
-                }
-                CHAR_LESS => {
-                    if let Some(CHAR_EQUAL) = self.ctx.peek_char() {
-                        let _ = self.ctx.read_char().unwrap();
-                        Some(self.ctx.less_equal())
-                    } else {
-                        Some(self.ctx.less())
-                    }
-                }
-                CHAR_GREATER => {
-                    if let Some(CHAR_EQUAL) = self.ctx.peek_char() {
-                        let _ = self.ctx.read_char().unwrap();
-                        Some(self.ctx.greater_equal())
-                    } else {
-                        Some(self.ctx.greater())
-                    }
-                }
-                CHAR_SLASH => {
-                    if let Some(CHAR_SLASH) = self.ctx.peek_char() {
-                        let cmnt = self.ctx.read_line();
-                        Some(self.ctx.comment(cmnt))
-                    } else {
-                        Some(self.ctx.slash())
-                    }
-                }
-                CHAR_DOUBLE_QUOTE => {
-                    if let Some(s) = self.ctx.read_string() {
-                        Some(self.ctx.string(s))
-                    } else {
-                        log::error!("We didnt finish the string");
-                        panic!("We should finish the string")
-                    }
-                }
-                CHAR_NEWLINE => Some(self.ctx.newline()),
-                ws if is_whitespace(ws) => {
-                    let ws = self.ctx.read_ws(ws);
-                    Some(self.ctx.whitespace(ws))
-                }
-                // Digit
-                digit if is_digit(digit) => {
-                    if let Some(number) = self.ctx.read_number(digit) {
-                        Some(self.ctx.number(number))
-                    } else {
-                        log::error!("We didnt finish the number");
-                        panic!("We should finish the number")
-                    }
-                }
-                // Alpha
-                alpha if is_alpha(alpha) => {
-                    let ident = self.ctx.read_identifier(alpha);
-
-                    let srch = KEYWORDS.binary_search_by_key(&ident.as_str(), |&(k, _)| k);
-                    let token_value = match srch {
-                        Ok(index) => KEYWORDS[index].1.clone(),
-                        Err(_) => TokenValue::Ident(ident),
-                    };
-
-                    Some(self.ctx.token(token_value))
-                }
-                unexpected => panic!("Unknown char {}", unexpected),
-            };
-
-            return match_token;
-        }
-
-        self.eof_sent = true;
-        Some(Token::new(TokenValue::Eof, self.ctx.span))
+        self.ctx.read_token()
     }
 }
 
@@ -195,6 +95,7 @@ impl<'a> Iterator for LexerIter<'a> {
 struct LexContext<'a> {
     source: Peekable<Chars<'a>>,
     span: Span,
+    eof_sent: bool,
 }
 
 impl<'a> LexContext<'a> {
@@ -203,16 +104,119 @@ impl<'a> LexContext<'a> {
         Self {
             source: source.chars().peekable(),
             span: Span::new(),
+            eof_sent: false,
+        }
+    }
+
+    pub(crate) fn read_token(&mut self) -> Option<Token> {
+        if self.eof_sent {
+            return None;
+        }
+
+        if let Some(c) = self.read_char() {
+            let match_token = match c {
+                // Single charactoer token
+                CHAR_LEFT_PAREN => Some(self.left_paren()),
+                CHAR_RIGHT_PAREN => Some(self.right_paren()),
+                CHAR_LEFT_BRACE => Some(self.left_brace()),
+                CHAR_RIGHT_BRACE => Some(self.right_brace()),
+                CHAR_COMMA => Some(self.comma()),
+                CHAR_DOT => Some(self.dot()),
+                CHAR_MINUS => Some(self.minus()),
+                CHAR_PLUS => Some(self.plus()),
+                CHAR_SEMICOLON => Some(self.semicolon()),
+                CHAR_STAR => Some(self.star()),
+                CHAR_BANG => {
+                    if let Some(CHAR_EQUAL) = self.peek_char() {
+                        let _ = self.read_char().unwrap();
+                        Some(self.bang_equal())
+                    } else {
+                        Some(self.bang())
+                    }
+                }
+                CHAR_EQUAL => {
+                    if let Some(CHAR_EQUAL) = self.peek_char() {
+                        let _ = self.read_char().unwrap();
+                        Some(self.equal_equal())
+                    } else {
+                        Some(self.equal())
+                    }
+                }
+                CHAR_LESS => {
+                    if let Some(CHAR_EQUAL) = self.peek_char() {
+                        let _ = self.read_char().unwrap();
+                        Some(self.less_equal())
+                    } else {
+                        Some(self.less())
+                    }
+                }
+                CHAR_GREATER => {
+                    if let Some(CHAR_EQUAL) = self.peek_char() {
+                        let _ = self.read_char().unwrap();
+                        Some(self.greater_equal())
+                    } else {
+                        Some(self.greater())
+                    }
+                }
+                CHAR_SLASH => {
+                    if let Some(CHAR_SLASH) = self.peek_char() {
+                        let cmnt = self.read_line();
+                        Some(self.comment(cmnt))
+                    } else {
+                        Some(self.slash())
+                    }
+                }
+                CHAR_DOUBLE_QUOTE => {
+                    if let Some(s) = self.read_string() {
+                        Some(self.string(s))
+                    } else {
+                        log::error!("We didnt finish the string");
+                        panic!("We should finish the string")
+                    }
+                }
+                CHAR_NEWLINE => Some(self.newline()),
+                ws if is_whitespace(ws) => {
+                    let ws = self.read_ws(ws);
+                    Some(self.whitespace(ws))
+                }
+                // Digit
+                digit if is_digit(digit) => {
+                    if let Some(number) = self.read_number(digit) {
+                        Some(self.number(number))
+                    } else {
+                        log::error!("We didnt finish the number");
+                        panic!("We should finish the number")
+                    }
+                }
+                // Alpha
+                alpha if is_alpha(alpha) => {
+                    let ident = self.read_identifier(alpha);
+
+                    let srch = KEYWORDS.binary_search_by_key(&ident.as_str(), |&(k, _)| k);
+                    let token_value = match srch {
+                        Ok(index) => KEYWORDS[index].1.clone(),
+                        Err(_) => TokenValue::Ident(ident),
+                    };
+
+                    Some(self.token(token_value))
+                }
+                unexpected => panic!("Unknown char {}", unexpected),
+            };
+
+            match_token
+        } else {
+            self.eof_sent = true;
+            Some(self.eof())
         }
     }
 
     /// Peeks to the first chararcter in the stream.
-    pub(crate) fn peek_char(&mut self) -> Option<char> {
+    fn peek_char(&mut self) -> Option<char> {
         self.source.peek().copied()
     }
 
     /// Read till the end of the line
-    pub(crate) fn read_line(&mut self) -> String {
+    fn read_line(&mut self) -> String {
         let mut buffer = String::new();
 
         for c in &mut self.source {
@@ -229,7 +233,7 @@ impl<'a> LexContext<'a> {
     }
 
     /// Read the next character in the stream
-    pub(crate) fn read_char(&mut self) -> Option<char> {
+    fn read_char(&mut self) -> Option<char> {
         if let Some(c) = self.source.next() {
             self.span.new_column();
             if c == CHAR_NEWLINE {
@@ -243,7 +247,7 @@ impl<'a> LexContext<'a> {
     }
 
     /// Read an identifier
-    pub(crate) fn read_identifier(&mut self, first_alpha: char) -> String {
+    fn read_identifier(&mut self, first_alpha: char) -> String {
         let mut buffer = format!("{}", first_alpha);
 
         while let Some(maybe_alphanumeric) = self.source.peek() {
@@ -259,7 +263,7 @@ impl<'a> LexContext<'a> {
     }
 
     /// Read a string
-    pub(crate) fn read_string(&mut self) -> Option<String> {
+    fn read_string(&mut self) -> Option<String> {
         let mut buffer = String::new();
         let mut string_terminated = false;
 
@@ -284,7 +288,7 @@ impl<'a> LexContext<'a> {
         }
     }
 
-    pub(crate) fn read_number(&mut self, first_digit: char) -> Option<f64> {
+    fn read_number(&mut self, first_digit: char) -> Option<f64> {
         let mut buffer = format!("{}", first_digit);
 
         // Read leading digits
@@ -337,7 +341,7 @@ impl<'a> LexContext<'a> {
         }
     }
 
-    pub(crate) fn read_ws(&mut self, first_ws: char) -> String {
+    fn read_ws(&mut self, first_ws: char) -> String {
         let mut buffer = format!("{}", first_ws);
 
         while let Some(maybe_ws) = self.source.peek().copied() {
@@ -352,128 +356,133 @@ impl<'a> LexContext<'a> {
         buffer
     }
 
-    pub(crate) fn token(&mut self, token_value: TokenValue) -> Token {
+    fn token(&mut self, token_value: TokenValue) -> Token {
         Token::new(token_value, self.span.extract())
     }
 
     #[inline]
-    pub(crate) fn left_paren(&mut self) -> Token {
+    fn left_paren(&mut self) -> Token {
         Token::left_paren(self.span.extract())
     }
 
     #[inline]
-    pub(crate) fn right_paren(&mut self) -> Token {
+    fn right_paren(&mut self) -> Token {
         Token::right_paren(self.span.extract())
     }
 
     #[inline]
-    pub(crate) fn left_brace(&mut self) -> Token {
+    fn left_brace(&mut self) -> Token {
         Token::left_brace(self.span.extract())
     }
 
     #[inline]
-    pub(crate) fn right_brace(&mut self) -> Token {
+    fn right_brace(&mut self) -> Token {
         Token::right_brace(self.span.extract())
     }
 
     #[inline]
-    pub(crate) fn comma(&mut self) -> Token {
+    fn comma(&mut self) -> Token {
         Token::comma(self.span.extract())
     }
 
     #[inline]
-    pub(crate) fn dot(&mut self) -> Token {
+    fn dot(&mut self) -> Token {
         Token::dot(self.span.extract())
     }
 
     #[inline]
-    pub(crate) fn minus(&mut self) -> Token {
+    fn minus(&mut self) -> Token {
         Token::minus(self.span.extract())
     }
 
     #[inline]
-    pub(crate) fn plus(&mut self) -> Token {
+    fn plus(&mut self) -> Token {
         Token::plus(self.span.extract())
     }
 
     #[inline]
-    pub(crate) fn semicolon(&mut self) -> Token {
+    fn semicolon(&mut self) -> Token {
         Token::semicolon(self.span.extract())
     }
 
     #[inline]
-    pub(crate) fn star(&mut self) -> Token {
+    fn star(&mut self) -> Token {
         Token::star(self.span.extract())
     }
 
     #[inline]
-    pub(crate) fn bang(&mut self) -> Token {
+    fn bang(&mut self) -> Token {
         Token::bang(self.span.extract())
     }
 
     #[inline]
-    pub(crate) fn bang_equal(&mut self) -> Token {
+    fn bang_equal(&mut self) -> Token {
         Token::bang_equal(self.span.extract())
     }
 
     #[inline]
-    pub(crate) fn equal(&mut self) -> Token {
+    fn equal(&mut self) -> Token {
         Token::equal(self.span.extract())
     }
 
     #[inline]
-    pub(crate) fn equal_equal(&mut self) -> Token {
+    fn equal_equal(&mut self) -> Token {
         Token::equal_equal(self.span.extract())
     }
 
     #[inline]
-    pub(crate) fn less(&mut self) -> Token {
+    fn less(&mut self) -> Token {
         Token::less(self.span.extract())
     }
 
     #[inline]
-    pub(crate) fn less_equal(&mut self) -> Token {
+    fn less_equal(&mut self) -> Token {
         Token::less_equal(self.span.extract())
     }
 
     #[inline]
-    pub(crate) fn greater(&mut self) -> Token {
+    fn greater(&mut self) -> Token {
         Token::greater(self.span.extract())
     }
 
     #[inline]
-    pub(crate) fn greater_equal(&mut self) -> Token {
+    fn greater_equal(&mut self) -> Token {
         Token::greater_equal(self.span.extract())
     }
 
     #[inline]
-    pub(crate) fn slash(&mut self) -> Token {
+    fn slash(&mut self) -> Token {
         Token::slash(self.span.extract())
     }
 
     #[inline]
-    pub(crate) fn comment(&mut self, c: String) -> Token {
+    fn comment(&mut self, c: String) -> Token {
         Token::comment(c, self.span.extract())
     }
 
     #[inline]
-    pub(crate) fn string(&mut self, s: String) -> Token {
+    fn string(&mut self, s: String) -> Token {
         Token::string(s, self.span.extract())
     }
 
     #[inline]
-    pub(crate) fn newline(&mut self) -> Token {
+    fn newline(&mut self) -> Token {
         Token::newline(self.span.extract())
     }
 
     #[inline]
-    pub(crate) fn whitespace(&mut self, ws: String) -> Token {
+    fn whitespace(&mut self, ws: String) -> Token {
         Token::whitespace(ws, self.span.extract())
     }
 
     #[inline]
-    pub(crate) fn number(&mut self, number: f64) -> Token {
+    fn number(&mut self, number: f64) -> Token {
         Token::number(number, self.span.extract())
+    }
+
+    #[inline]
+    fn eof(&mut self) -> Token {
+        Token::new(TokenValue::Eof, self.span.extract())
     }
 }
 
