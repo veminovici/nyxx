@@ -56,20 +56,44 @@ impl Span {
 
 impl Display for Span {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "({}:{}-{}:{})",
-            self.start_line, self.start_col, self.end_line, self.end_col
-        )
+        if self.start_line == self.end_line {
+            if self.end_col - self.start_col == 1 {
+                write!(f, "[{}:{}]", self.start_line, self.start_col)
+            } else {
+                write!(
+                    f,
+                    "[{}:{}..{}]",
+                    self.start_line, self.start_col, self.end_col
+                )
+            }
+        } else {
+            write!(
+                f,
+                "({}:{}..{}:{})",
+                self.start_line, self.start_col, self.end_line, self.end_col
+            )
+        }
     }
 }
 
 impl Debug for Span {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "({}:{}-{}:{})",
-            self.start_line, self.start_col, self.end_line, self.end_col
-        )
+        if self.start_line == self.end_line {
+            if self.end_col - self.start_col == 1 {
+                write!(f, "[{}:{}]", self.start_line, self.start_col)
+            } else {
+                write!(
+                    f,
+                    "[{}:{}..{}]",
+                    self.start_line, self.start_col, self.end_col
+                )
+            }
+        } else {
+            write!(
+                f,
+                "({}:{}..{}:{})",
+                self.start_line, self.start_col, self.end_line, self.end_col
+            )
+        }
     }
 }

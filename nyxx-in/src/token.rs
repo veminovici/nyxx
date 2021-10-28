@@ -358,6 +358,6 @@ impl Display for Token {
 
 impl Debug for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}@{:?}", self.tkn_value, self.span)
+        write!(f, "{:?} @ {:?}", self.tkn_value, self.span)
     }
 }
