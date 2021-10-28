@@ -37,6 +37,6 @@ EOF @ [2:6..6]
 ## Resources & Credits
 [Crafting interpreters](http://craftinginterpreters.com/)
 
-## A *thank you* note !!!
+## Contact
 
 > You can contact me at veminovici@hotmail.com. Code designed and written in Päädu, on the beautiful island of [**Saaremaa**](https://goo.gl/maps/DmB9ewY2R3sPGFnTA), Estonia.
