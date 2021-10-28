@@ -56,6 +56,138 @@ static KEYWORDS: &[(&str, TokenValue)] = &[
     ("while", TokenValue::While),
 ];
 
+/// The lexer for a source string
+pub struct Lexer<'a> {
+    source: &'a str,
+}
+
+impl<'a> Lexer<'a> {
+    /// Creates a new lexer
+    pub fn new(source: &'a str) -> Self {
+        Lexer { source }
+    }
+
+    /// returns an iterator
+    pub fn iter(&self) -> LexerIter {
+        LexerIter {
+            ctx: LexContext::new(self.source),
+            eof_sent: false,
+        }
+    }
+}
+
+/// Creates an iterator for the tokens
+pub struct LexerIter<'a> {
+    ctx: LexContext<'a>,
+    eof_sent: bool,
+}
+
+impl<'a> Iterator for LexerIter<'a> {
+    type Item = Token;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.eof_sent {
+            return None;
+        }
+
+        if let Some(c) = self.ctx.read_char() {
+            let match_token = match c {
+                // Single charactoer token
+                CHAR_LEFT_PAREN => Some(self.ctx.left_paren()),
+                CHAR_RIGHT_PAREN => Some(self.ctx.right_paren()),
+                CHAR_LEFT_BRACE => Some(self.ctx.left_brace()),
+                CHAR_RIGHT_BRACE => Some(self.ctx.right_brace()),
+                CHAR_COMMA => Some(self.ctx.comma()),
+                CHAR_DOT => Some(self.ctx.dot()),
+                CHAR_MINUS => Some(self.ctx.minus()),
+                CHAR_PLUS => Some(self.ctx.plus()),
+                CHAR_SEMICOLON => Some(self.ctx.semicolon()),
+                CHAR_STAR => Some(self.ctx.star()),
+                CHAR_BANG => {
+                    if let Some(CHAR_EQUAL) = self.ctx.peek_char() {
+                        let _ = self.ctx.read_char().unwrap();
+                        Some(self.ctx.bang_equal())
+                    } else {
+                        Some(self.ctx.bang())
+                    }
+                }
+                CHAR_EQUAL => {
+                    if let Some(CHAR_EQUAL) = self.ctx.peek_char() {
+                        let _ = self.ctx.read_char().unwrap();
+                        Some(self.ctx.equal_equal())
+                    } else {
+                        Some(self.ctx.equal())
+                    }
+                }
+                CHAR_LESS => {
+                    if let Some(CHAR_EQUAL) = self.ctx.peek_char() {
+                        let _ = self.ctx.read_char().unwrap();
+                        Some(self.ctx.less_equal())
+                    } else {
+                        Some(self.ctx.less())
+                    }
+                }
+                CHAR_GREATER => {
+                    if let Some(CHAR_EQUAL) = self.ctx.peek_char() {
+                        let _ = self.ctx.read_char().unwrap();
+                        Some(self.ctx.greater_equal())
+                    } else {
+                        Some(self.ctx.greater())
+                    }
+                }
+                CHAR_SLASH => {
+                    if let Some(CHAR_SLASH) = self.ctx.peek_char() {
+                        let cmnt = self.ctx.read_line();
+                        Some(self.ctx.comment(cmnt))
+                    } else {
+                        Some(self.ctx.slash())
+                    }
+                }
+                CHAR_DOUBLE_QUOTE => {
+                    if let Some(s) = self.ctx.read_string() {
+                        Some(self.ctx.string(s))
+                    } else {
+                        log::error!("We didnt finish the string");
+                        panic!("We should finish the string")
+                    }
+                }
+                CHAR_NEWLINE => Some(self.ctx.newline()),
+                ws if is_whitespace(ws) => {
+                    let ws = self.ctx.read_ws(ws);
+                    Some(self.ctx.whitespace(ws))
+                }
+                // Digit
+                digit if is_digit(digit) => {
+                    if let Some(number) = self.ctx.read_number(digit) {
+                        Some(self.ctx.number(number))
+                    } else {
+                        log::error!("We didnt finish the number");
+                        panic!("We should finish the number")
+                    }
+                }
+                // Alpha
+                alpha if is_alpha(alpha) => {
+                    let ident = self.ctx.read_identifier(alpha);
+
+                    let srch = KEYWORDS.binary_search_by_key(&ident.as_str(), |&(k, _)| k);
+                    let token_value = match srch {
+                        Ok(index) => KEYWORDS[index].1.clone(),
+                        Err(_) => TokenValue::Ident(ident),
+                    };
+
+                    Some(self.ctx.token(token_value))
+                }
+                unexpected => panic!("Unknown char {}", unexpected),
+            };
+
+            return match_token;
+        }
+
+        self.eof_sent = true;
+        Some(Token::new(TokenValue::Eof, self.ctx.span))
+    }
+}
+
 /// Parses the source string and returns the collection of tokens
 pub fn lex(source: &str) -> Vec<Token> {
     let mut tokens = Vec::new();

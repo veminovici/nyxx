@@ -9,4 +9,7 @@ fn main() {
 
     let tokens = lex(&source);
     println!("tokens={:?}", tokens);
+
+    let lexer = Lexer::new(&source);
+    lexer.iter().for_each(|tkn| println!("token: {:?}", tkn));
 }
