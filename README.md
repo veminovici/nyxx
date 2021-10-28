@@ -1,18 +1,5 @@
-# Simplee..Nyxx...
-A rust crate
-
-## Run
-You can run nyxx in two modes:
-
-In the **prompt** mode you can introduce and interpret one line at a time.
-```rust
-RUST_LOG=trace target/debug/nyxx
-```
-
-In the **script** mode, you pass a source file.
-```rust
-RUST_LOG=trace target/debug/nyxx hello.lx
-```
+# ![rust](https://img.shields.io/badge/Rust-000000?style=for-the-badge&logo=rust&logoColor=white) Simplee...Nyxx... 
+A collection of rust crates for an interpreter.
 
 ## Lexer
 The **nyxx-in** exposes the **Lexer** structure which can parse an input source string and return the list of tokens.
@@ -23,7 +10,7 @@ let source = "var language=\n\"lox\";".to_string();
 let lexer = Lexer::new(source);
 lexer.iter().for_each(|tkn| println!("{:?}", tkn));
 ```
-shuld return the following list of tokens:
+should return the following list of tokens:
 ```
 VAR@(1:0-1:3)
 WS( )@(1:3-1:4)
@@ -35,5 +22,13 @@ SEMICOLON@(2:5-2:6)
 EOF@(2:6-2:6)
 ```
 
-## Resources
+## Build Status
+
+[![Github Actions](https://buildstats.info/github/chart/veminovici/nyxx)](https://github.com/veminovici/nyxx)
+
+## Resources & Credits
 [Crafting interpreters](http://craftinginterpreters.com/)
+
+## A *thank you* note !!!
+
+> You can contact me at veminovici@hotmail.com. Code designed and written in Päädu, on the beautiful island of [**Saaremaa**](https://goo.gl/maps/DmB9ewY2R3sPGFnTA), Estonia.
