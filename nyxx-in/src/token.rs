@@ -361,3 +361,212 @@ impl Debug for Token {
         write!(f, "{:?} @ {:?}", self.tkn_value, self.span)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_token_left_paren() {
+        let t = Token::left_paren(Span::new());
+        assert!(!format!("{}", t).is_empty());
+        assert!(!format!("{:?}", t).is_empty());
+        assert!(matches!(t.tkn_value, TokenValue::LeftParen));
+    }
+
+    #[test]
+    fn test_token_right_paren() {
+        let t = Token::right_paren(Span::new());
+        assert!(!format!("{}", t).is_empty());
+        assert!(!format!("{:?}", t).is_empty());
+        assert!(matches!(t.tkn_value, TokenValue::RightParen));
+    }
+
+    #[test]
+    fn test_token_left_brace() {
+        let t = Token::left_brace(Span::new());
+        assert!(!format!("{}", t).is_empty());
+        assert!(!format!("{:?}", t).is_empty());
+        assert!(matches!(t.tkn_value, TokenValue::LeftBrace));
+    }
+
+    #[test]
+    fn test_token_right_brace() {
+        let t = Token::right_brace(Span::new());
+        assert!(!format!("{}", t).is_empty());
+        assert!(!format!("{:?}", t).is_empty());
+        assert!(matches!(t.tkn_value, TokenValue::RightBrace));
+    }
+
+    #[test]
+    fn test_token_comma() {
+        let t = Token::comma(Span::new());
+        assert!(!format!("{}", t).is_empty());
+        assert!(!format!("{:?}", t).is_empty());
+        assert!(matches!(t.tkn_value, TokenValue::Comma));
+    }
+
+    #[test]
+    fn test_token_dot() {
+        let t = Token::dot(Span::new());
+        assert!(!format!("{}", t).is_empty());
+        assert!(!format!("{:?}", t).is_empty());
+        assert!(matches!(t.tkn_value, TokenValue::Dot));
+    }
+
+    #[test]
+    fn test_token_minus() {
+        let t = Token::minus(Span::new());
+        assert!(!format!("{}", t).is_empty());
+        assert!(!format!("{:?}", t).is_empty());
+        assert!(matches!(t.tkn_value, TokenValue::Minus));
+    }
+
+    #[test]
+    fn test_token_plus() {
+        let t = Token::plus(Span::new());
+        assert!(!format!("{}", t).is_empty());
+        assert!(!format!("{:?}", t).is_empty());
+        assert!(matches!(t.tkn_value, TokenValue::Plus));
+    }
+
+    #[test]
+    fn test_token_semicolon() {
+        let t = Token::semicolon(Span::new());
+        assert!(!format!("{}", t).is_empty());
+        assert!(!format!("{:?}", t).is_empty());
+        assert!(matches!(t.tkn_value, TokenValue::Semicolon));
+    }
+
+    #[test]
+    fn test_token_star() {
+        let t = Token::star(Span::new());
+        assert!(!format!("{}", t).is_empty());
+        assert!(!format!("{:?}", t).is_empty());
+        assert!(matches!(t.tkn_value, TokenValue::Star));
+    }
+
+    #[test]
+    fn test_token_bang() {
+        let t = Token::bang(Span::new());
+        assert!(!format!("{}", t).is_empty());
+        assert!(!format!("{:?}", t).is_empty());
+        assert!(matches!(t.tkn_value, TokenValue::Bang));
+    }
+
+    #[test]
+    fn test_token_bang_equal() {
+        let t = Token::bang_equal(Span::new());
+        assert!(!format!("{}", t).is_empty());
+        assert!(!format!("{:?}", t).is_empty());
+        assert!(matches!(t.tkn_value, TokenValue::BangEqual));
+    }
+
+    #[test]
+    fn test_token_equal() {
+        let t = Token::equal(Span::new());
+        assert!(!format!("{}", t).is_empty());
+        assert!(!format!("{:?}", t).is_empty());
+        assert!(matches!(t.tkn_value, TokenValue::Equal));
+    }
+
+    #[test]
+    fn test_token_equal_equal() {
+        let t = Token::equal_equal(Span::new());
+        assert!(!format!("{}", t).is_empty());
+        assert!(!format!("{:?}", t).is_empty());
+        assert!(matches!(t.tkn_value, TokenValue::EqualEqual));
+    }
+
+    #[test]
+    fn test_token_less() {
+        let t = Token::less(Span::new());
+        assert!(!format!("{}", t).is_empty());
+        assert!(!format!("{:?}", t).is_empty());
+        assert!(matches!(t.tkn_value, TokenValue::Less));
+    }
+
+    #[test]
+    fn test_token_less_equal() {
+        let t = Token::less_equal(Span::new());
+        assert!(!format!("{}", t).is_empty());
+        assert!(!format!("{:?}", t).is_empty());
+        assert!(matches!(t.tkn_value, TokenValue::LessEqual));
+    }
+
+    #[test]
+    fn test_token_greater() {
+        let t = Token::greater(Span::new());
+        assert!(!format!("{}", t).is_empty());
+        assert!(!format!("{:?}", t).is_empty());
+        assert!(matches!(t.tkn_value, TokenValue::Greater));
+    }
+
+    #[test]
+    fn test_token_greater_equal() {
+        let t = Token::greater_equal(Span::new());
+        assert!(!format!("{}", t).is_empty());
+        assert!(!format!("{:?}", t).is_empty());
+        assert!(matches!(t.tkn_value, TokenValue::GreaterEqual));
+    }
+
+    #[test]
+    fn test_token_slash() {
+        let t = Token::slash(Span::new());
+        assert!(!format!("{}", t).is_empty());
+        assert!(!format!("{:?}", t).is_empty());
+        assert!(matches!(t.tkn_value, TokenValue::Slash));
+    }
+
+    #[test]
+    fn test_token_comment() {
+        let t = Token::comment("test".to_string(), Span::new());
+        assert!(!format!("{}", t).is_empty());
+        assert!(!format!("{:?}", t).is_empty());
+        match t.tkn_value {
+            TokenValue::Comment(c) => assert_eq!(c, "test"),
+            _ => unreachable!(),
+        }
+    }
+
+    #[test]
+    fn test_token_string() {
+        let t = Token::string("test".to_string(), Span::new());
+        assert!(!format!("{}", t).is_empty());
+        assert!(!format!("{:?}", t).is_empty());
+        match t.tkn_value {
+            TokenValue::String(c) => assert_eq!(c, "test"),
+            _ => unreachable!(),
+        }
+    }
+
+    #[test]
+    fn test_token_number() {
+        let t = Token::number(10., Span::new());
+        assert!(!format!("{}", t).is_empty());
+        assert!(!format!("{:?}", t).is_empty());
+        match t.tkn_value {
+            TokenValue::Number(c) => assert!((c - 10.) * (c - 10.) < f64::EPSILON),
+            _ => unreachable!(),
+        }
+    }
+
+    #[test]
+    fn test_token_ws() {
+        let t = Token::whitespace("test".to_string(), Span::new());
+        assert!(!format!("{}", t).is_empty());
+        assert!(!format!("{:?}", t).is_empty());
+        match t.tkn_value {
+            TokenValue::Whitespace(c) => assert_eq!(c, "test"),
+            _ => unreachable!(),
+        }
+    }
+
+    #[test]
+    fn test_token_newline() {
+        let t = Token::newline(Span::new());
+        assert!(!format!("{}", t).is_empty());
+        assert!(!format!("{:?}", t).is_empty());
+        assert!(matches!(t.tkn_value, TokenValue::NewLine));
+    }
+}
