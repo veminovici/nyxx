@@ -18,7 +18,9 @@ let source = "var language=\n\"lox\";".to_string();
 let lexer = Lexer::new(source);
 lexer.iter().for_each(|tkn| println!("{:?}", tkn));
 ```
-should return the following list of tokens:
+
+The code above will return the below list of tokens. For each token you can see its type and the optional values attached to it (e.g. *STRING*) and its span (the line and column).
+
 ```
 VAR @ [1:0..3]
 WS( ) @ [1:3]
