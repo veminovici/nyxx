@@ -7,7 +7,7 @@ A collection of rust crates for an interpreter.
 [![CI Pipeline](https://github.com/veminovici/nyxx/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/veminovici/nyxx/actions/workflows/ci.yml)
 [![Last commit](https://img.shields.io/github/last-commit/veminovici/nyxx)](https://github.com/veminovici/nyxx)
 [![Repo size](https://img.shields.io/github/repo-size/veminovici/nyxx)](https://github.com/veminovici/nyxx)
-![GitHub issues](https://img.shields.io/github/issues/veminovici/nyxx)
+[![GitHub issues](https://img.shields.io/github/issues/veminovici/nyxx)](https://github.com/veminovici/nyxx/issues)
 
 </br>
 
