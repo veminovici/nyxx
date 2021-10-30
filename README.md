@@ -3,48 +3,37 @@ A collection of rust crates for an interpreter.
 
 </br>
 
+![GitHub top language](https://img.shields.io/github/languages/top/veminovici/nyxx)
 [![CI Pipeline](https://github.com/veminovici/nyxx/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/veminovici/nyxx/actions/workflows/ci.yml)
 [![Last commit](https://img.shields.io/github/last-commit/veminovici/nyxx)](https://github.com/veminovici/nyxx)
 [![Repo size](https://img.shields.io/github/repo-size/veminovici/nyxx)](https://github.com/veminovici/nyxx)
+![GitHub issues](https://img.shields.io/github/issues/veminovici/nyxx)
 
 </br>
 
-## Lexer
-The **nyxx-in** exposes the **Lexer** structure which can parse an input source string and return the list of tokens.
-In order to do that, you need to get the **iter** from the lexer which will give you access to an **Iterator**.
+## Nyxx Lexer
+The project contains the **nyxx-lexer** crate. The crate implements the **Lexer** structure which allows the caller
+to parse a string source and get back an iterator which gives you access to a collection of **tokens**. For more details regarding how the **lexer** can be used, please check the [readme](https://github.com/veminovici/nyxx/blob/main/nyxx-lexer/README.md) file.
 
-```rust
-let source = "var language=\n\"lox\";".to_string();
-let lexer = Lexer::new(source);
-lexer.iter().for_each(|tkn| println!("{:?}", tkn));
-```
+</br>
 
-The code above will return the below list of tokens. For each token you can see its type and the optional values attached to it (e.g. *STRING*) and its span (the line and column).
-
-```
-VAR @ [1:0..3]
-WS( ) @ [1:3]
-IDENT(language) @ [1:4..12]
-EQUAL @ [1:12]
-NEWLINE @ (1:13..2:0)
-STRING(lox) @ [2:0..5]
-SEMICOLON @ [2:5]
-EOF @ [2:6..6]
-```
-
-## Build Status, Test Coverage
+## Project Status
 
 [![Github Actions](https://buildstats.info/github/chart/veminovici/nyxx)](https://github.com/veminovici/nyxx)
 
+### Test Coverage
 In order to see the test coverage numbers, you can run while in the project root directory:
+
 ```bash
 chmod +x ./cov.sh
 ./cov.sh
 ```
 
 ## Resources & Credits
-[Crafting interpreters](http://craftinginterpreters.com/)
-[Test coverage](https://vladfilippov.com/blog/rust-code-coverage-tools/)
+- [Crafting interpreters](http://craftinginterpreters.com/)
+- [Test coverage](https://vladfilippov.com/blog/rust-code-coverage-tools/)
+
+</br>
 
 ## Contact
 
