@@ -21,6 +21,16 @@ impl Span {
         }
     }
 
+    /// Returns the starting line and column for the given span.
+    pub fn start(&self) -> (usize, usize) {
+        (self.start_line, self.start_col)
+    }
+
+    /// Returns the end line and column for the given span.
+    pub fn end(&self) -> (usize, usize) {
+        (self.end_line, self.end_col)
+    }
+
     pub(crate) fn new_column(&mut self) {
         self.end_col += 1;
     }
@@ -158,6 +168,9 @@ mod tests {
         assert_eq!(1, span.end_line);
         assert_eq!(0, span.start_col);
         assert_eq!(1, span.end_col);
+
+        assert_eq!((1, 0), span.start());
+        assert_eq!((1, 1), span.end());
     }
 
     #[test]
@@ -170,6 +183,9 @@ mod tests {
         assert_eq!(2, span.end_line);
         assert_eq!(0, span.start_col);
         assert_eq!(0, span.end_col);
+
+        assert_eq!((1, 0), span.start());
+        assert_eq!((2, 0), span.end());
     }
 
     #[test]
