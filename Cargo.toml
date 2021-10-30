@@ -2,7 +2,6 @@
 
 members = [
     "nyxx",
-    "nyxx-in",
     "nyxx-lexer",
     "nyxx-parser",
 ]
