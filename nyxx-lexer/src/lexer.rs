@@ -130,6 +130,7 @@ impl<'a> LexContext<'a> {
                 }
                 CHAR_DOUBLE_QUOTE => {
                     if let Some(s) = self.read_string() {
+                        println!("Did we get here?");
                         Some(self.string(s))
                     } else {
                         log::error!("We didnt finish the string");
@@ -154,13 +155,13 @@ impl<'a> LexContext<'a> {
                 alpha if is_alpha(alpha) => {
                     let ident = self.read_identifier(alpha);
 
-                    let srch = KEYWORDS.binary_search_by_key(&ident.as_str(), |&(k, _)| k);
-                    let token_value = match srch {
-                        Ok(index) => KEYWORDS[index].1.clone(),
-                        Err(_) => TokenValue::Ident(ident),
+                    let srch = KEYWORDS.binary_search_by_key(&&*ident, |&(k, _)| k);
+                    let token = match srch {
+                        Ok(index) => self.token(KEYWORDS[index].1.clone()),
+                        Err(_) => self.identifier(ident),
                     };
 
-                    Some(self.token(token_value))
+                    Some(token)
                 }
                 unexpected => panic!("Unknown char {}", unexpected),
             };
@@ -440,6 +441,11 @@ impl<'a> LexContext<'a> {
     #[inline]
     fn number(&mut self, number: f64) -> Token {
         Token::number(number, self.span.extract())
+    }
+
+    #[inline]
+    fn identifier(&mut self, i: String) -> Token {
+        Token::identifier(i, self.span.extract())
     }
 
     #[inline]

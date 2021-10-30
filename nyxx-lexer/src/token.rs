@@ -351,8 +351,8 @@ impl Token {
 
     /// Create a identifier token
     #[inline]
-    pub(crate) fn identifier(i: &str, span: Span) -> Self {
-        Token::new(TokenValue::Ident(i.to_string()), span)
+    pub(crate) fn identifier(i: String, span: Span) -> Self {
+        Token::new(TokenValue::Ident(i), span)
     }
 }
 
@@ -578,11 +578,12 @@ mod tests {
 
     #[test]
     fn test_identifier() {
-        let t = Token::identifier("language", Span::new());
+        let i = "language";
+        let t = Token::identifier(i.to_string(), Span::new());
         assert!(!format!("{}", t).is_empty());
         assert!(!format!("{:?}", t).is_empty());
         match t.tkn_value {
-            TokenValue::Ident(c) => assert_eq!(c, "language"),
+            TokenValue::Ident(c) => assert_eq!(c, i),
             _ => unreachable!(),
         }
     }
