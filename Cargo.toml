@@ -3,4 +3,5 @@
 members = [
     "nyxx",
     "nyxx-in",
+    "nyxx-lexer",
 ]
