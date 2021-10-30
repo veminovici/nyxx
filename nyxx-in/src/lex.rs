@@ -498,20 +498,37 @@ impl<'a> LexContext<'a> {
 // Utility functions
 //
 
+#[inline]
 fn is_digit(c: char) -> bool {
     c >= CHAR_0 && c <= CHAR_9
 }
 
+#[inline]
 fn is_alpha(c: char) -> bool {
     c >= CHAR_LOWERCASE_A && c <= CHAR_LOWERCASE_Z
         || c >= CHAR_UPPERCASE_A && c <= CHAR_UPPERCASE_Z
         || c == CHAR_UNDERSCORE
 }
 
+#[inline]
 fn is_alphanum(c: char) -> bool {
     is_alpha(c) || is_digit(c)
 }
 
+#[inline]
 fn is_whitespace(c: char) -> bool {
     c == CHAR_WHITESPACE || c == CHAR_TAB || c == CHAR_CARRIAGE_RETURN
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::lex::is_digit;
+
+    #[test]
+    fn test_is_digit() {
+        assert!(!is_digit(10 as char));
+        assert!(is_digit('0'));
+        assert!(is_digit('9'));
+        assert!(!is_digit('a'));
+    }
 }

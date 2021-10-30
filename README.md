@@ -38,6 +38,7 @@ EOF @ [2:6..6]
 
 ## Resources & Credits
 [Crafting interpreters](http://craftinginterpreters.com/)
+[Test coverage](https://vladfilippov.com/blog/rust-code-coverage-tools/)
 
 ## Contact
 
