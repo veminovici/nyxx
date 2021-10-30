@@ -1,5 +1,5 @@
 [package]
-name = "nyxx-lexer"
+name = "nyxx-parser"
 version = "0.1.0"
 edition = "2018"
 authors = ["Vlad Eminovici veminovici@hotmail.com"]
@@ -7,9 +7,9 @@ readme = "README.md"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/veminovici/nyxx"
 description = """
-Lexer
+Parser
 """
-keywords = ["lexer", "interpreter", "compiler"]
+keywords = ["parser", "interpreter", "compiler"]
 categories = ["compiler", "interpreter"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

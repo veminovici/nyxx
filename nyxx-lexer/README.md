@@ -2,7 +2,7 @@
 A crate which exposes a lexer. The create is part of the **nyxx** project.
 
 ## Nyxx Lexer
-The **nyxx-in** exposes the **Lexer** structure which can parse an input source string and return the list of tokens.
+The **nyxx-lexer** exposes the **Lexer** structure which can parse an input source string and returns the list of tokens.
 In order to do that, you need to get the **iter** from the lexer which will give you access to an **Iterator**.
 
 ```rust

@@ -17,6 +17,13 @@ to parse a string source and get back an iterator which gives you access to a co
 
 </br>
 
+## Nyxx Parser
+The project contains the **nyxx-parser** crate. The crate implements the **Parser** structure which allows the caller
+to parse a collection of tokens and get back an AST. For more details regarding how the **parser** can be used, please check the [readme](https://github.com/veminovici/nyxx/blob/main/nyxx-parser/README.md) file.
+
+
+</br>
+
 ## Project Status
 
 [![Github Actions](https://buildstats.info/github/chart/veminovici/nyxx)](https://github.com/veminovici/nyxx)
