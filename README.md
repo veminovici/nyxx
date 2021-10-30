@@ -32,9 +32,14 @@ SEMICOLON @ [2:5]
 EOF @ [2:6..6]
 ```
 
-## Build Status
+## Build Status, Test Coverage
 
 [![Github Actions](https://buildstats.info/github/chart/veminovici/nyxx)](https://github.com/veminovici/nyxx)
+
+In order to see the test coverage numbers, you can run while in the project root directory:
+```bash
+./cov.sh
+```
 
 ## Resources & Credits
 [Crafting interpreters](http://craftinginterpreters.com/)
