@@ -38,6 +38,7 @@ EOF @ [2:6..6]
 
 In order to see the test coverage numbers, you can run while in the project root directory:
 ```bash
+chmod +x ./cov.sh
 ./cov.sh
 ```
 
